@@ -158,6 +158,30 @@ app.get('/listMember', async (req, res) => {
 })
 
 
+//list books
+
+app.get('/listbook', async (req, res) => {
+    let connection;
+    try {
+        connection = await getConnection();
+        let query = {};
+        if (req.query.ISBN) {
+            query.ISBno = req.query.ISBN;
+        }
+
+        console.log(`query: ${JSON.stringify(query)}`)
+        let booklist = await connection.db().collection("book").find(query).toArray();
+        //console.log(members);
+        res.render(__dirname + "/listbooks", { listbook: booklist, query: query });
+    } catch (error) {
+        console.error('Error listing books: ', error);
+        res.sendStatus(500);
+    } finally {
+        await connection.close();
+    }
+})
+
+
 // Retrieve all members
 
 // app.get('/getmembers', async (req, res) => {

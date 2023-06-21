@@ -68,43 +68,30 @@
 </head>
 
 <body>
-    <h1>Members</h1>
+    <h1>listbook</h1>
     <div>
-        <form method="get" action="listMember" class="inline-form">
-            <input type="text" name="name" placeholder="Name" value="<%= query.Name %>" />
-            <input type="text" name="phoneNumber" placeholder="Phone Number" value="<%= query.Phone %>" />
-            <input type="submit" value="Search" />
-        </form>
 
-        <div>
-            <p><a href="addMembers">Add Member</a></p>
-        </div>
+        <form action="listbook" method="get" class="inline-form">
+            <input type="text" name="ISBN" placeholder="ISBN" value="<%= query.ISBN %>" />
+
+        </form>
     </div>
     <table>
         <thead>
             <tr>
-                <th>MemberId</th>
-                <th>Name</th>
+                <th>ISBN</th>
+                <th>Author</th>
                 <th></th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
-            <% for (var i=0; i < members.length; i++) { %>
+            <% for (var i=0; i < listbook.length; i++) { %>
                 <tr>
                     <td>
-                        <%= members[i].MemberID %>
+                        <%= listbook[i].ISBN %>
                     </td>
-                    <td>
-                        <%= members[i].Name %>
-                    </td>
-                    <td>
-                        <form method="POST" action="/deleteMember" class="inline-form">
-                            <input type="hidden" name="id" value="<%= members[i]._id %>">
-                            <input type="submit" value="Delete">
-                        </form>
-                    </td>
-                    <td><a href="updateMember/<%= members[i]._id %>">Edit</a></td>
+
                 </tr>
                 <% } %>
         </tbody>
