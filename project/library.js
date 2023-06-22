@@ -27,7 +27,7 @@ app.set("view engine", "ejs");
 
 
 
-//const dbName = "yourdatabasename";
+
 
 async function getConnection() {
 
@@ -328,72 +328,6 @@ app.post('/checkout', async (req, res) => {
     }
 })
 
-// Check out a book
-// app.post('/checkoutBook', async (req, res) => {
-//     const { MemberID, ISBN } = req.body;
-//     let connection;
-
-//     try {
-//         connection = await getConnection();
-
-//         // Get the member and book from the database
-//         const member = await connection.db().collection("members").findOne({ _id: new ObjectId(MemberID) });
-//         const book = await connection.db().collection("book").findOne({ _id: new ObjectId(ISBN) });
-
-//         if (!member || !book) {
-//             console.log('Member or book not found');
-//             res.sendStatus(404);
-//             return;
-//         }
-
-//         // Check if the member has any overdue books or exceeds the fee limit
-//         if (member.overdueBooks.length > 0 || member.feesOwed >= 100) {
-//             console.log('Member cannot check out a book due to overdue books or fee limit exceeded');
-//             res.sendStatus(403);
-//             return;
-//         }
-
-//         // Calculate the due date based on member type
-//         let maxCheckoutDays = 0;
-//         let overdueFee = 0.0;
-
-//         if (member.Role === 'Standard') {
-//             maxCheckoutDays = 21;
-//             overdueFee = 0.25;
-//         } else if (member.Role === 'Staff') {
-//             maxCheckoutDays = 21;
-//             overdueFee = 0.10;
-//         } else if (member.Role === 'Senior') {
-//             maxCheckoutDays = 42;
-//             overdueFee = 0.05;
-//         }
-
-//         const currentDate = new Date();
-//         const dueDate = new Date();
-//         dueDate.setDate(currentDate.getDate() + maxCheckoutDays);
-
-//         // Update the member's checkedOutBooks array with the book details
-//         member.checkedOutBooks.push({
-//             ISBN: book.ISBN,
-//             Title: book.Title,
-//             dueDate
-//         });
-
-//         // Update the member's record in the database
-//         await connection.db().collection('members').updateOne(
-//             { _id: new ObjectId(MemberID) },
-//             { $set: { checkedOutBooks: member.checkedOutBooks } }
-//         );
-
-//         console.log('Book checked out successfully');
-//         res.sendStatus(200);
-//     } catch (error) {
-//         console.error('Error checking out book:', error);
-//         res.sendStatus(500);
-//     } finally {
-//         await connection.close();
-//     }
-// });
 
 
 
@@ -461,53 +395,6 @@ app.post('/checkoutBook', async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-///
-// app.get('/checkedOutBooks', async (req, res) => {
-//     let connection;
-
-//     try {
-//         connection = await getConnection();
-
-//         // Find all members with checked out books
-//         const members = await connection.db().collection("members").find({ checkedOutBooks: { $exists: true, $ne: [] } }).toArray();
-
-//         // Create an array to store the checked out books
-//         const checkedOutBooks = [];
-
-//         // Iterate over each member and their checked out books
-//         for (const member of members) {
-//             for (const checkedOutBook of member.checkedOutBooks) {
-//                 checkedOutBooks.push({
-//                     memberId: member._id,
-//                     memberName: member.Name,
-//                     bookId: checkedOutBook.bookId,
-//                     title: checkedOutBook.title,
-//                     dueDate: checkedOutBook.dueDate
-//                 });
-//             }
-//         }
-
-//         console.log('Checked out books:', checkedOutBooks);
-//         res.render(__dirname + "/checkedOutBooks", { checkedOutBooks });
-//     } catch (error) {
-//         console.error('Error retrieving checked out books:', error);
-//         res.sendStatus(500);
-//     } finally {
-//         await connection.close();
-//     }
-// });
-
-
-
-
-//listbook
 
 
 
@@ -625,14 +512,6 @@ app.get('/overdueAmount/:memberId', async (req, res) => {
         await connection.close();
     }
 });
-
-
-
-
-
-
-
-
 
 
 
