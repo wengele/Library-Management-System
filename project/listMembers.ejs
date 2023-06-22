@@ -99,6 +99,22 @@
                         <%= members[i].Name %>
                     </td>
                     <td>
+                        <%= members[i].Address %>
+                    </td>
+                    <td>
+                        <%= members[i].Phone %>
+                    </td>
+                    <td>
+                        <%= members[i].Payment %>
+                    </td>
+                    <td>
+                        <%= members[i].Role %>
+                    </td>
+
+                    <td>
+                        <%= members[i].Age %>
+                    </td>
+                    <td>
                         <form method="POST" action="/deleteMember" class="inline-form">
                             <input type="hidden" name="id" value="<%= members[i]._id %>">
                             <input type="submit" value="Delete">

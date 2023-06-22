@@ -5,13 +5,8 @@ const app = express();
 
 const methodOverride = require('method-override');
 
-
-
-
 const { MongoClient, ObjectId } = require('mongodb');
 const { get } = require('mongoose');
-
-
 
 
 //app.use(express.static('public'));
@@ -166,11 +161,30 @@ app.get('/listbook', async (req, res) => {
         connection = await getConnection();
         let query = {};
         if (req.query.ISBN) {
-            query.ISBno = req.query.ISBN;
+            query.ISBN = req.query.ISBN;
         }
 
+        if (req.query.Author) {
+            query.Author = req.query.Author;
+        }
+
+        let sort = {};
+
+        if (req.query.SortByAuthor) {
+            sort.Author = req.query.SortByAuthor === 'asc' ? 1 : -1;
+        }
+
+        if (req.query.SortByTitle) {
+            sort.Title = req.query.SortByTitle === 'asc' ? 1 : -1;
+        }
+
+        if (req.query.SortByCategory) {
+            sort.Catagory = req.query.SortByCategory === 'asc' ? 1 : -1;
+        }
+
+
         console.log(`query: ${JSON.stringify(query)}`)
-        let booklist = await connection.db().collection("book").find(query).toArray();
+        let booklist = await connection.db().collection("book").find(query).sort(sort).toArray();
         //console.log(members);
         res.render(__dirname + "/listbooks", { listbook: booklist, query: query });
     } catch (error) {
@@ -182,25 +196,321 @@ app.get('/listbook', async (req, res) => {
 })
 
 
-// Retrieve all members
 
-// app.get('/getmembers', async (req, res) => {
+app.get('/checkoutbook', async (req, res) => {
+    res.render('checkout');
+
+    try {
+        const connection = await getConnection();
+
+        // Fetch all checked out books
+        const checkedOutBooks = await connection.db().collection('books').find({ checkedOut: true }).toArray();
+
+        // Render the view and pass the checked out books as data
+        res.render('checkedout', { checkedOutbooks: checkedOutBooks });
+
+    } catch (error) {
+        console.error('Error retrieving checked out books:', error);
+        res.sendStatus(500);
+
+    } finally {
+        await connection.close();
+    }
+
+
+
+});
+
+
+
+
+// Check out a book
+// app.post('/checkoutBook', async (req, res) => {
+//     const { MemberID, ISBN } = req.body;
+//     let connection;
 
 //     try {
+//         connection = await getConnection();
 
-//         const members = await database.collection('members').find().toArray();
+//         // Get the member and book from the database
+//         const member = await connection.db().collection("members").findOne({ _id: new ObjectId(MemberID) });
+//         const book = await connection.db().collection("book").findOne({ _id: new ObjectId(ISBN) });
 
-//         res.json(members);
+//         if (!member || !book) {
+//             console.log('Member or book not found');
+//             res.sendStatus(404);
+//             return;
+//         }
 
+//         // Check if the member has any overdue books or exceeds the fee limit
+//         if (member.overdueBooks.length > 0 || member.feesOwed >= 100) {
+//             console.log('Member cannot check out a book due to overdue books or fee limit exceeded');
+//             res.sendStatus(403);
+//             return;
+//         }
+
+//         // Calculate the due date based on member type
+//         let maxCheckoutDays = 0;
+//         let overdueFee = 0.0;
+
+//         if (member.Role === 'Standard') {
+//             maxCheckoutDays = 21;
+//             overdueFee = 0.25;
+//         } else if (member.Role === 'Staff') {
+//             maxCheckoutDays = 21;
+//             overdueFee = 0.10;
+//         } else if (member.Role === 'Senior') {
+//             maxCheckoutDays = 42;
+//             overdueFee = 0.05;
+//         }
+
+//         const currentDate = new Date();
+//         const dueDate = new Date();
+//         dueDate.setDate(currentDate.getDate() + maxCheckoutDays);
+
+//         // Update the member's checkedOutBooks array with the book details
+//         member.checkedOutBooks.push({
+//             ISBN: book.ISBN,
+//             Title: book.Title,
+//             dueDate
+//         });
+
+//         // Update the member's record in the database
+//         await connection.db().collection('members').updateOne(
+//             { _id: new ObjectId(MemberID) },
+//             { $set: { checkedOutBooks: member.checkedOutBooks } }
+//         );
+
+//         console.log('Book checked out successfully');
+//         res.sendStatus(200);
 //     } catch (error) {
-
-//         console.error('Error retrieving members:', error);
-
+//         console.error('Error checking out book:', error);
 //         res.sendStatus(500);
-
+//     } finally {
+//         await connection.close();
 //     }
-
 // });
+
+
+
+app.post('/checkoutBook', async (req, res) => {
+    const { memberId, bookId, dueDate } = req.body;
+    let connection;
+
+
+
+    try {
+        connection = await getConnection();
+
+
+
+        // Find the member and book in the database
+        const member = await connection.db().collection('members').findOne({ MemberID: memberId });
+        const book = await connection.db().collection('book').findOne({ bookId });
+
+
+
+        // Check if the member and book exist
+        if (!member) {
+            console.log('Member not found');
+            res.sendStatus(404);
+            return;
+        }
+        if (!book) {
+            console.log('Book not found');
+            res.sendStatus(404);
+            return;
+        }
+
+
+
+        // Create a new checked out book object
+        const checkedOutBook = {
+            ISBN: book.ISBN,
+            Title: book.Title,
+            dueDate: dueDate
+        };
+
+
+
+        // Add the checked out book to the member's checkedOutBooks array
+        member.checkedOutBooks.push(checkedOutBook);
+
+
+
+        // Update the member in the database
+        await connection.db().collection('members').updateOne({ MemberID: memberId }, { $set: member });
+
+
+
+        console.log('Book checked out successfully');
+        res.sendStatus(200);
+    } catch (error) {
+        console.error('Error checking out book:', error);
+        res.sendStatus(500);
+    } finally {
+        await connection.close();
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+///
+// app.get('/checkedOutBooks', async (req, res) => {
+//     let connection;
+
+//     try {
+//         connection = await getConnection();
+
+//         // Find all members with checked out books
+//         const members = await connection.db().collection("members").find({ checkedOutBooks: { $exists: true, $ne: [] } }).toArray();
+
+//         // Create an array to store the checked out books
+//         const checkedOutBooks = [];
+
+//         // Iterate over each member and their checked out books
+//         for (const member of members) {
+//             for (const checkedOutBook of member.checkedOutBooks) {
+//                 checkedOutBooks.push({
+//                     memberId: member._id,
+//                     memberName: member.Name,
+//                     bookId: checkedOutBook.bookId,
+//                     title: checkedOutBook.title,
+//                     dueDate: checkedOutBook.dueDate
+//                 });
+//             }
+//         }
+
+//         console.log('Checked out books:', checkedOutBooks);
+//         res.render(__dirname + "/checkedOutBooks", { checkedOutBooks });
+//     } catch (error) {
+//         console.error('Error retrieving checked out books:', error);
+//         res.sendStatus(500);
+//     } finally {
+//         await connection.close();
+//     }
+// });
+
+
+
+
+//listbook
+
+
+
+app.get('/borrowedBooks/:memberId', async (req, res) => {
+    const memberId = req.params.memberId;
+    let connection;
+
+    try {
+        connection = await getConnection();
+
+        // Find the member with the given memberId
+        const member = await connection.db().collection("members").findOne({ _id: new ObjectId(memberId) });
+
+        if (!member) {
+            console.log('Member not found');
+            res.sendStatus(404);
+            return;
+        }
+
+        console.log('Borrowed books:', member.checkedOutBooks);
+        res.render(__dirname + "/borrowedBooks", { member });
+    } catch (error) {
+        console.error('Error retrieving borrowed books:', error);
+        res.sendStatus(500);
+    } finally {
+        await connection.close();
+    }
+});
+
+
+
+
+
+
+app.get('/overdueMembers', async (req, res) => {
+    let connection;
+
+    try {
+        connection = await getConnection();
+
+        // Find members with overdue books
+        const members = await connection.db().collection("members").find({ overdueBooks: { $exists: true, $ne: [] } }).toArray();
+
+        console.log('Members with overdue books:', members);
+        res.render(__dirname + "/overdueMembers", { members });
+    } catch (error) {
+        console.error('Error retrieving members with overdue books:', error);
+        res.sendStatus(500);
+    } finally {
+        await connection.close();
+    }
+});
+
+
+
+app.get('/overdueAmount/:memberId', async (req, res) => {
+    const memberId = req.params.memberId;
+    let connection;
+
+    try {
+        connection = await getConnection();
+
+        // Find the member with the given memberId
+        const member = await connection.db().collection("members").findOne({ _id: new ObjectId(memberId) });
+
+        if (!member) {
+            console.log('Member not found');
+            res.sendStatus(404);
+            return;
+        }
+
+        let totalOverdueAmount = 0;
+
+        // Calculate the total overdue amount for the member
+        for (const overdueBook of member.overdueBooks) {
+            const dueDate = new Date(overdueBook.dueDate);
+            const currentDate = new Date();
+
+            const daysOverdue = Math.ceil((currentDate - dueDate) / (1000 * 60 * 60 * 24));
+            const overdueFee = overdueBook.overdueFee;
+
+            const bookOverdueAmount = daysOverdue * overdueFee;
+            totalOverdueAmount += bookOverdueAmount;
+        }
+
+        console.log('Total overdue amount:', totalOverdueAmount);
+        res.render(__dirname + "/overdueAmount", { member, totalOverdueAmount });
+    } catch (error) {
+        console.error('Error retrieving overdue amount:', error);
+        res.sendStatus(500);
+    } finally {
+        await connection.close();
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

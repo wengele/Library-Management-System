@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>List Book</title>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -17,12 +18,11 @@
             margin-bottom: 20px;
         }
 
-        form {
-            margin-bottom: 20px;
+        form.inline-form {
+            display: inline-block;
         }
 
-        input[type="text"],
-        input[type="submit"] {
+        form.inline-form input[type="text"] {
             padding: 10px;
             border-radius: 5px;
             border: 1px solid #ccc;
@@ -30,15 +30,13 @@
             margin-right: 10px;
         }
 
-        input[type="submit"] {
+        form.inline-form input[type="submit"] {
+            margin-top: 0;
+            padding: 10px;
+            border-radius: 5px;
             background-color: #4CAF50;
             color: white;
             cursor: pointer;
-        }
-
-        a {
-            text-decoration: none;
-            color: #0066cc;
         }
 
         table {
@@ -57,30 +55,59 @@
             background-color: #f2f2f2;
         }
 
-        form.inline-form {
-            display: inline-block;
-        }
-
-        form.inline-form input[type="submit"] {
-            margin-top: 0;
+        a {
+            text-decoration: none;
+            color: #0066cc;
         }
     </style>
 </head>
 
 <body>
-    <h1>listbook</h1>
+    <h1>List Book</h1>
     <div>
-
         <form action="listbook" method="get" class="inline-form">
             <input type="text" name="ISBN" placeholder="ISBN" value="<%= query.ISBN %>" />
-
+            <input type="text" name="Author" placeholder="Author" value="<%= query.Author %>" />
+            <input type="submit" value="Search" />
         </form>
+
+        <form action="listbook" method="get" class="inline-form">
+            <input type="hidden" name="ISBN" value="<%= query.ISBN %>" />
+            <select name="SortByAuthor" onchange="this.form.submit()">
+                <option value="">Sort by Author</option>
+                <option value="asc" <% if (query.SortByAuthor==='asc' ) { %>selected<% } %>>Ascending</option>
+                <option value="desc" <% if (query.SortByAuthor==='desc' ) { %>selected<% } %>>Descending</option>
+            </select>
+            <label for="SortByTitle">Sort by Title :</label>
+            <select name="SortByTitle" id="SortByTitle">
+                <option value="">None</option>
+                <option value="asc" <% if (query.SortByTitle==='asc' ) { %>selected<% } %>>Ascending</option>
+                <option value="desc" <% if (query.SortByTitle==='desc' ) { %>selected<% } %>>Descending</option>
+            </select>
+            <label for="SortByCategory">Sort by Category:</label>
+            <select name="SortByCategory" id="SortByCategory">
+                <option value="">None</option>
+                <option value="asc" <% if (query.SortByCategory==='asc' ) { %>selected<% } %>>Ascending</option>
+                <option value="desc" <% if (query.SortByCategory==='desc' ) { %>selected<% } %>>Descending</option>
+            </select>
+            <input type="submit" value="Sort" />
+        </form>
+
+
+
     </div>
     <table>
         <thead>
             <tr>
                 <th>ISBN</th>
+                <th>Title</th>
                 <th>Author</th>
+                <th>PublisherID</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Location</th>
+                <th>LibraryID</th>
+                <th>BookStatus</th>
                 <th></th>
                 <th></th>
             </tr>
@@ -91,7 +118,37 @@
                     <td>
                         <%= listbook[i].ISBN %>
                     </td>
-
+                    <td>
+                        <%= listbook[i].Title %>
+                    </td>
+                    <td>
+                        <%= listbook[i].Author %>
+                    </td>
+                    <td>
+                        <%= listbook[i].PublisherID %>
+                    </td>
+                    <td>
+                        <%= listbook[i].Description %>
+                    </td>
+                    <td>
+                        <%= listbook[i].Catagory %>
+                    </td>
+                    <td>
+                        <%= listbook[i].Location %>
+                    </td>
+                    <td>
+                        <%= listbook[i].LibraryID %>
+                    </td>
+                    <td>
+                        <%= listbook[i].BookStatus %>
+                    </td>
+                    <td>
+                        <form method="POST" action="/checkout" class="inline-form">
+                            <input type="hidden" name="ISBN" value="<%= listbook[i].ISBN %>">
+                            <input type="checkbox" value="true">
+                            <input type="submit" value="Checkout">
+                        </form>
+                    </td>
                 </tr>
                 <% } %>
         </tbody>
