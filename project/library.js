@@ -24,11 +24,6 @@ app.set("view engine", "ejs");
 
 // MongoDB Connection
 
-
-
-
-
-
 async function getConnection() {
 
     const client = new MongoClient('mongodb://127.0.0.1:27017/Library_system', {
@@ -329,13 +324,9 @@ app.post('/checkout', async (req, res) => {
 })
 
 
-
-
 app.post('/checkoutBook', async (req, res) => {
     const { memberId, bookId, dueDate } = req.body;
     let connection;
-
-
 
     try {
         connection = await getConnection();
@@ -391,13 +382,6 @@ app.post('/checkoutBook', async (req, res) => {
     }
 });
 
-
-
-
-
-
-
-
 app.get('/borrowedBooks/:memberId', async (req, res) => {
     const memberId = req.params.memberId;
     let connection;
@@ -423,10 +407,6 @@ app.get('/borrowedBooks/:memberId', async (req, res) => {
         await connection.close();
     }
 });
-
-
-
-
 
 
 app.get('/overdueMembers', async (req, res) => {
@@ -512,25 +492,6 @@ app.get('/overdueAmount/:memberId', async (req, res) => {
         await connection.close();
     }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // Add a new book
