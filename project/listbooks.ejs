@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>List Book</title>
-
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -63,96 +63,139 @@
 </head>
 
 <body>
-    <h1>List Book</h1>
-    <div>
-        <form action="listbook" method="get" class="inline-form">
-            <input type="text" name="ISBN" placeholder="ISBN" value="<%= query.ISBN %>" />
-            <input type="text" name="Author" placeholder="Author" value="<%= query.Author %>" />
-            <input type="submit" value="Search" />
-        </form>
-
-        <form action="listbook" method="get" class="inline-form">
-            <input type="hidden" name="ISBN" value="<%= query.ISBN %>" />
-            <select name="SortByAuthor" onchange="this.form.submit()">
-                <option value="">Sort by Author</option>
-                <option value="asc" <% if (query.SortByAuthor==='asc' ) { %>selected<% } %>>Ascending</option>
-                <option value="desc" <% if (query.SortByAuthor==='desc' ) { %>selected<% } %>>Descending</option>
-            </select>
-            <label for="SortByTitle">Sort by Title :</label>
-            <select name="SortByTitle" id="SortByTitle">
-                <option value="">None</option>
-                <option value="asc" <% if (query.SortByTitle==='asc' ) { %>selected<% } %>>Ascending</option>
-                <option value="desc" <% if (query.SortByTitle==='desc' ) { %>selected<% } %>>Descending</option>
-            </select>
-            <label for="SortByCategory">Sort by Category:</label>
-            <select name="SortByCategory" id="SortByCategory">
-                <option value="">None</option>
-                <option value="asc" <% if (query.SortByCategory==='asc' ) { %>selected<% } %>>Ascending</option>
-                <option value="desc" <% if (query.SortByCategory==='desc' ) { %>selected<% } %>>Descending</option>
-            </select>
-            <input type="submit" value="Sort" />
-        </form>
-
-
-
-    </div>
-    <table>
-        <thead>
-            <tr>
-                <th>ISBN</th>
-                <th>Title</th>
-                <th>Author</th>
-                <th>PublisherID</th>
-                <th>Description</th>
-                <th>Category</th>
-                <th>Location</th>
-                <th>LibraryID</th>
-                <th>BookStatus</th>
-                <th></th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            <% for (var i=0; i < listbook.length; i++) { %>
-                <tr>
-                    <td>
-                        <%= listbook[i].ISBN %>
-                    </td>
-                    <td>
-                        <%= listbook[i].Title %>
-                    </td>
-                    <td>
-                        <%= listbook[i].Author %>
-                    </td>
-                    <td>
-                        <%= listbook[i].PublisherID %>
-                    </td>
-                    <td>
-                        <%= listbook[i].Description %>
-                    </td>
-                    <td>
-                        <%= listbook[i].Catagory %>
-                    </td>
-                    <td>
-                        <%= listbook[i].Location %>
-                    </td>
-                    <td>
-                        <%= listbook[i].LibraryID %>
-                    </td>
-                    <td>
-                        <%= listbook[i].BookStatus %>
-                    </td>
-                    <td>
-                        <form method="POST" action="/checkout" class="inline-form">
-                            <input type="hidden" name="ISBN" value="<%= listbook[i].ISBN %>">
-                            <input type="checkbox" value="true">
-                            <input type="submit" value="Checkout">
+    <% if (locals.error) { %>
+        <p style="color: red">
+            <%= error %>
+        </p>
+        <%} %>
+            <% if (locals.message) { %>
+                <p style="color: green">
+                    <%= message %>
+                </p>
+                <%} %>
+                    <h1>List Book</h1>
+                    <div>
+                        <p><a href="listMember">Home</a></p>
+                    </div>
+                    <div>
+                        <form action="listbook" method="get" class="inline-form">
+                            <input type="text" name="ISBN" placeholder="ISBN" value="<%= query.ISBN %>" />
+                            <input type="text" name="Author" placeholder="Author" value="<%= query.Author %>" />
+                            <input type="submit" value="Search" />
                         </form>
-                    </td>
-                </tr>
-                <% } %>
-        </tbody>
-    </table>
+
+                        <form action="listbook" method="get" class="inline-form">
+                            <input type="hidden" name="ISBN" value="<%= query.ISBN %>" />
+                            <select name="SortByAuthor" onchange="this.form.submit()">
+                                <option value="">Sort by Author</option>
+                                <option value="asc" <% if (query.SortByAuthor==='asc' ) { %>selected<% } %>>Ascending
+                                </option>
+                                <option value="desc" <% if (query.SortByAuthor==='desc' ) { %>selected<% } %>>Descending
+                                </option>
+                            </select>
+                            <label for="SortByTitle">Sort by Title :</label>
+                            <select name="SortByTitle" id="SortByTitle">
+                                <option value="">None</option>
+                                <option value="asc" <% if (query.SortByTitle==='asc' ) { %>selected<% } %>>Ascending
+                                </option>
+                                <option value="desc" <% if (query.SortByTitle==='desc' ) { %>selected<% } %>>Descending
+                                </option>
+                            </select>
+                            <label for="SortByCategory">Sort by Category:</label>
+                            <select name="SortByCategory" id="SortByCategory">
+                                <option value="">None</option>
+                                <option value="asc" <% if (query.SortByCategory==='asc' ) { %>selected<% } %>>Ascending
+                                </option>
+                                <option value="desc" <% if (query.SortByCategory==='desc' ) { %>selected<% } %>
+                                        >Descending
+                                </option>
+                            </select>
+                            <input type="submit" value="Sort" />
+                        </form>
+
+
+
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ISBN</th>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>PublisherID</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Location</th>
+                                <th>LibraryID</th>
+                                <th>BookStatus</th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% for (var i=0; i < listbook.length; i++) { %>
+                                <tr>
+                                    <td>
+                                        <%= listbook[i].ISBN %>
+                                    </td>
+                                    <td>
+                                        <%= listbook[i].Title %>
+                                    </td>
+                                    <td>
+                                        <%= listbook[i].Author %>
+                                    </td>
+                                    <td>
+                                        <%= listbook[i].PublisherID %>
+                                    </td>
+                                    <td>
+                                        <%= listbook[i].Description %>
+                                    </td>
+                                    <td>
+                                        <%= listbook[i].Catagory %>
+                                    </td>
+                                    <td>
+                                        <%= listbook[i].Location %>
+                                    </td>
+                                    <td>
+                                        <%= listbook[i].LibraryID %>
+                                    </td>
+                                    <td>
+                                        <%= listbook[i].BookStatus %>
+                                    </td>
+                                    <td>
+                                        <% if(listbook[i].isCheckedOut) { %>
+                                            <form method="GET" action="/checkin">
+                                                <input type="hidden" name="ISBN" value="<%= listbook[i].ISBN %>">
+                                                <input type="submit" value="Checkin">
+                                            </form>
+                                            <% } else {%>
+                                                <button onclick="openModal('<%= listbook[i].ISBN %>')">Checkout</button>
+                                                <% } %>
+                                    </td>
+                                </tr>
+                                <% } %>
+                        </tbody>
+                    </table>
+                    <div id="id01" class="w3-modal">
+                        <div class="w3-modal-content">
+                            <div class="w3-container">
+                                <span onclick="document.getElementById('id01').style.display='none'"
+                                    class="w3-button w3-display-topright">&times;</span>
+                                <form method="POST" action="/checkout" class="inline-form">
+                                    <input id="isbn-input" type="hidden" name="ISBN" value="">
+                                    <label>Member ID</label>
+                                    <input type="input" name="MemberID">
+                                    <input type="submit" value="Checkout">
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <script>
+                        function openModal(bookId) {
+                            document.getElementById("isbn-input").value = bookId;
+                            document.getElementById('id01').style.display = 'block';
+                        }
+                    </script>
 </body>
 
 </html>

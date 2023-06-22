@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Checkin</title>
+</head>
+
+<body>
+    <h1>Check in</h1>
+    <ul>
+        <li>ISBN: <%= checkOutInfo.ISBN %>
+        </li>
+        <li>MemberId: <%= checkOutInfo.memberID %>
+        </li>
+        <li>Checkout date: <%= checkOutInfo.checkOutDate %>
+        </li>
+        <li>Fee: <%= checkOutInfo.fee %>$
+        </li>
+    </ul>
+    <form method="post" action="checkin">
+        <input type="hidden" name="ISBN" value="<%= checkOutInfo.ISBN %>" />
+        <input type="submit" value="Checkin" />
+    </form>
+</body>
+
+</html>

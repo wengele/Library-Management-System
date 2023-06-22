@@ -182,11 +182,10 @@ app.get('/listbook', async (req, res) => {
             sort.Catagory = req.query.SortByCategory === 'asc' ? 1 : -1;
         }
 
-
         console.log(`query: ${JSON.stringify(query)}`)
         let booklist = await connection.db().collection("book").find(query).sort(sort).toArray();
         //console.log(members);
-        res.render(__dirname + "/listbooks", { listbook: booklist, query: query });
+        res.render(__dirname + "/listbooks", { listbook: booklist, query: query, ...req.query });
     } catch (error) {
         console.error('Error listing books: ', error);
         res.sendStatus(500);
@@ -220,9 +219,114 @@ app.get('/checkoutbook', async (req, res) => {
 
 
 });
+app.post('/checkin', async (req, res) => {
+    ISBN = req.body.ISBN;
+    let connection;
+    try {
+        connection = await getConnection();
+        console.log(`isbn ${ISBN}`)
+        let checkOutInfo = await connection.db().collection("CheckedOutBooks").findOne({ ISBN: ISBN, isReturned: false });
+        let member = await connection.db().collection("members").findOne({ MemberID: checkOutInfo.memberID });
+        let book = await connection.db().collection("book").findOne({ ISBN });
+        await connection.db().collection("book").updateOne({ ISBN: checkOutInfo.ISBN }, { $set: { isCheckedOut: false } });
+        await connection.db().collection("members").updateOne({ MemberID: checkOutInfo.memberID }, { $set: { hasCheckedOutBook: false } });
+        await connection.db().collection("CheckedOutBooks").updateOne({ _id: checkOutInfo._id }, { $set: { isReturned: true } })
+        res.redirect("listbook")
+    } catch (error) {
+        console.error('Error checking out book:', error);
+    } finally {
+        await connection.close();
+    }
+})
+app.get('/checkin', async (req, res) => {
+    ISBN = req.query.ISBN;
+    let connection;
+    try {
+        connection = await getConnection();
+        console.log(`isbn ${ISBN}`)
+        let checkOutInfo = await connection.db().collection("CheckedOutBooks").findOne({ ISBN: ISBN, isReturned: false });
+        let member = await connection.db().collection("members").findOne({ MemberID: checkOutInfo.memberID });
+        console.log(JSON.stringify(checkOutInfo));
+        console.log(JSON.stringify(member));
+        let maxCheckoutDays = 0;
+        let overdueFee = 0.0;
 
+        if (member.Role === 'Standard') {
+            maxCheckoutDays = 21;
+            overdueFee = 0.25;
+        } else if (member.Role === 'Staff') {
+            maxCheckoutDays = 21;
+            overdueFee = 0.10;
+        } else if (member.Role === 'Senior') {
+            maxCheckoutDays = 42;
+            overdueFee = 0.05;
+        }
+        const checkedOutDate = checkOutInfo.checkOutDate;
+        const checkinDate = new Date();
+        const diffTime = Math.abs(checkinDate - checkedOutDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        let fee = diffDays > maxCheckoutDays ? overdueFee * (diffDays - maxCheckoutDays) : 0;
+        console.log(diffDays);
+        console.log(`maxCheckoutDays: ${maxCheckoutDays} overdueFee: ${overdueFee}`);
+        res.render(__dirname + '/checkin', { checkOutInfo: { ...checkOutInfo, fee } });
 
+    } catch (error) {
+        console.error('Error checking out book:', error);
+    } finally {
+        await connection.close();
+    }
+})
 
+app.post('/checkout', async (req, res) => {
+    const { MemberID, ISBN } = req.body;
+    let connection;
+    let error = null;
+    let message = null;
+
+    try {
+        connection = await getConnection();
+        console.log(`member id ${MemberID}`)
+        const member = await connection.db().collection("members").findOne({ MemberID: MemberID });
+        const book = await connection.db().collection("book").findOne({ ISBN: ISBN });
+        console.log(`book ${JSON.stringify(book)} member ${JSON.stringify(member)}`)
+        if (!member || !book) {
+            console.log('Member or book not found');
+            error = "Member or book not found";
+        }
+        else if (member.hasCheckedOutBook || member.feesOwed >= 100) {
+            console.log('Member cannot check out a book due to overdue books or fee limit exceeded');
+            error = 'Member cannot check out a book due to overdue books or fee limit exceeded';
+        }
+        else {
+            let checkOutInfo = {
+                memberID: member.MemberID,
+                ISBN: ISBN,
+                checkOutDate: new Date(),
+                isReturned: false
+            }
+            member.hasCheckedOutBook = true;
+            book.isCheckedOut = true;
+            await connection.db().collection('members').updateOne(
+                { MemberID: member.MemberID },
+                { $set: { hasCheckedOutBook: true } }
+            );
+            await connection.db().collection('book').updateOne(
+                { ISBN: book.ISBN },
+                { $set: { isCheckedOut: true } }
+            )
+            await connection.db().collection('CheckedOutBooks').insertOne(checkOutInfo);
+            message = "successfully checked out book!"
+
+        }
+
+    } catch (error) {
+        console.error('Error checking out book:', error);
+        res.sendStatus(500);
+    } finally {
+        await connection.close();
+        res.redirect(`listbook?error=${error ? error : ""}&message=${message ? message : ""}`)
+    }
+})
 
 // Check out a book
 // app.post('/checkoutBook', async (req, res) => {
@@ -443,12 +547,35 @@ app.get('/overdueMembers', async (req, res) => {
 
     try {
         connection = await getConnection();
-
+        let overDraftInfo = [];
         // Find members with overdue books
-        const members = await connection.db().collection("members").find({ overdueBooks: { $exists: true, $ne: [] } }).toArray();
+        const checkedOutBooks = await connection.db().collection("CheckedOutBooks").find({ isReturned: false }).toArray();
+        for (let checkedOutBook of checkedOutBooks) {
+            let member = await connection.db().collection("members").findOne({ MemberID: checkedOutBook.memberID });
+            let book = await connection.db().collection("book").findOne({ ISBN: checkedOutBook.ISBN });
+            let maxCheckoutDays = 0;
+            let overdueFee = 0.0;
 
-        console.log('Members with overdue books:', members);
-        res.render(__dirname + "/overdueMembers", { members });
+            if (member.Role === 'Standard') {
+                maxCheckoutDays = 21;
+                overdueFee = 0.25;
+            } else if (member.Role === 'Staff') {
+                maxCheckoutDays = 21;
+                overdueFee = 0.10;
+            } else if (member.Role === 'Senior') {
+                maxCheckoutDays = 42;
+                overdueFee = 0.05;
+            }
+            const checkedOutDate = checkedOutBook.checkOutDate;
+            const checkinDate = new Date();
+            const diffTime = Math.abs(checkinDate - checkedOutDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays > maxCheckoutDays) {
+                let fee = overdueFee * (diffDays - maxCheckoutDays);
+                overDraftInfo.push({ book, member, fee, diffDays });
+            }
+        }
+        res.render(__dirname + "/overdueMembers", { overDraftInfo });
     } catch (error) {
         console.error('Error retrieving members with overdue books:', error);
         res.sendStatus(500);
